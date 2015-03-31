@@ -19,7 +19,7 @@ class TmcClient(Event):
 
     def __init__(self, url, app_key, app_secret, group_name='default',
                  query_message_interval=50, heartbeat_interval=30,
-                 io_loop=None, *args, **kwargs):
+                 *args, **kwargs):
         super(TmcClient, self).__init__(self)
 
         logger.info('[%s:%s]WebSocket Connect Success.', url, group_name)
@@ -40,7 +40,6 @@ class TmcClient(Event):
 
         self.token = None
 
-        self.io_loop = io_loop or ioloop.IOLoop.current()
         self.ws = None
         self.connect()
 
@@ -69,7 +68,6 @@ class TmcClient(Event):
     def connect(self):
         websocket_connect(
             self.url,
-            io_loop=self.io_loop,
             callback=self.on_open,
             on_message_callback=self.on_message
         )
