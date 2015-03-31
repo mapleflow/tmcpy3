@@ -13,6 +13,8 @@ from tmcpy.messageio import reader, writer
 from tmcpy.message import Message
 from tmcpy.utils import confirm_message, query_message, to_binary
 
+__all__ = ['TmcClient']
+
 
 logger = logging.getLogger('tmcpy.client')
 

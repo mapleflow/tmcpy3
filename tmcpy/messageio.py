@@ -1,6 +1,5 @@
 # coding: utf-8
-
-__all__ = ['reader', 'writer']
+from __future__ import absolute_import, unicode_literals
 
 from struct import calcsize, unpack_from, pack
 from datetime import datetime
@@ -9,6 +8,8 @@ import six
 
 from tmcpy.messagetype import MessageType
 from tmcpy.message import Message
+
+__all__ = ['reader', 'writer']
 
 
 class _Reader(object):

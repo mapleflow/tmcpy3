@@ -1,5 +1,10 @@
 # coding: utf-8
+from __future__ import absolute_import, unicode_literals
 from collections import defaultdict
+
+import six
+
+__all__ = ['InvalidListenerError', 'DuplicateListenerError', 'Event']
 
 
 class InvalidListenerError(Exception):
@@ -16,7 +21,7 @@ class Event(object):
         self.__listeners = defaultdict(list)
 
     def on(self, name, callback):
-        assert callable(callback), 'callback is not callable.'
+        assert six.callable(callback), 'callback is not callable.'
         if callback in self.__listeners[name]:
             raise DuplicateListenerError()
 

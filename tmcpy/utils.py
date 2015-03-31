@@ -5,6 +5,12 @@ import six
 from tmcpy.message import ConfirmMessage, QueryMessage
 from tmcpy.messageio import writer
 
+__all__ = [
+    'confirm_message',
+    'query_message',
+    'to_binary',
+]
+
 
 def confirm_message(message_id, token):
     cm = ConfirmMessage()
