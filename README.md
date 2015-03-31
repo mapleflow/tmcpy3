@@ -12,7 +12,7 @@ from tmcpy import TmcClient
 logging.basicConfig(level=logging.DEBUG)
 
 
-ws = TmcClient(
+tmc = TmcClient(
     'ws://mc.api.tbsandbox.com/',
     'appkey',
     'appsecret',
@@ -25,11 +25,11 @@ def print1():
     print 'on_open'
 
 
-ws.on("on_open", print1)
+tmc.on("on_open", print1)
 try:
     ioloop.IOLoop.instance().start()
 except KeyboardInterrupt:
     pass
 finally:
-    ws.close()
+    tmc.close()
 ```

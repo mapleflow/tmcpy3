@@ -1,15 +1,17 @@
 # coding: utf-8
+from __future__ import absolute_import, unicode_literals, print_function
 import time
 import logging
 import hashlib
 
-from tornado import ioloop, iostream
+import six
+from tornado import ioloop
 from tornado.websocket import websocket_connect
 
 from tmcpy.event import Event
 from tmcpy.messageio import reader, writer
 from tmcpy.message import Message
-from tmcpy.utils import confirm_message, query_message
+from tmcpy.utils import confirm_message, query_message, to_binary
 
 
 logger = logging.getLogger('tmcpy.client')
@@ -24,10 +26,10 @@ class TmcClient(Event):
 
         logger.info('[%s:%s]WebSocket Connect Success.', url, group_name)
 
-        assert isinstance(url, (str, unicode)) and len(url) > 0
-        assert isinstance(app_key, (str, unicode)) and len(app_key) > 0
-        assert isinstance(app_secret, (str, unicode)) and len(app_secret) > 0
-        assert isinstance(group_name, (str, unicode)) and len(group_name) > 0
+        assert isinstance(url, six.string_types) and len(url) > 0
+        assert isinstance(app_key, six.string_types) and len(app_key) > 0
+        assert isinstance(app_secret, six.string_types) and len(app_secret) > 0
+        assert isinstance(group_name, six.string_types) and len(group_name) > 0
         assert isinstance(query_message_interval, int) and 0 < query_message_interval < 60
         assert isinstance(heartbeat_interval, int) and 0 < heartbeat_interval < 60
 
@@ -55,7 +57,7 @@ class TmcClient(Event):
             'timestamp': timestamp,
         }
 
-        keys = params.keys()
+        keys = list(params.keys())
         keys.sort()
 
         params = "%s%s%s" % (
@@ -63,7 +65,7 @@ class TmcClient(Event):
             ''.join('%s%s' % (key, params[key]) for key in keys),
             self.app_secret
         )
-        return hashlib.md5(params).hexdigest().upper()
+        return hashlib.md5(to_binary(params)).hexdigest().upper()
 
     def connect(self):
         websocket_connect(
@@ -157,7 +159,7 @@ if __name__ == '__main__':
     ws = TmcClient('ws://mc.api.tbsandbox.com/', '1021700086', 'sandboxfd42495fa4db86f6ad1d4b878', 'default',
         query_message_interval=50)
     def print1():
-        print 'on_open'
+        print('on_open')
     ws.on("on_open", print1)
     try:
         ioloop.IOLoop.current().start()

@@ -21,7 +21,7 @@ from tmcpy import TmcClient
 
 logging.basicConfig(level=logging.DEBUG)
 
-ws = TmcClient('ws://mc.api.tbsandbox.com/', 'appkey', 'appsecret', 'default',
+tmc = TmcClient('ws://mc.api.tbsandbox.com/', 'appkey', 'appsecret', 'default',
     query_message_interval=50)
 
 
@@ -29,13 +29,13 @@ def print1():
     print 'on_open'
 
 
-ws.on("on_open", print1)
+tmc.on("on_open", print1)
 try:
     ioloop.IOLoop.instance().start()
 except KeyboardInterrupt:
     pass
 finally:
-    ws.close()
+    tmc.close()
 ```
 
 """,
@@ -49,6 +49,8 @@ finally:
     zip_safe=False,
     install_requires=[
         # -*- Extra requirements: -*-
-        'tornado>=4.1'
+        'tornado>=4.1',
+        'six>=1.9.0',
+        'simplejson>=3.6.5'
     ]
 )

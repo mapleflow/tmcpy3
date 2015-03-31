@@ -2,10 +2,10 @@
 
 __all__ = ['reader', 'writer']
 
-import types
 from struct import calcsize, unpack_from, pack
 from datetime import datetime
 
+import six
 
 from tmcpy.messagetype import MessageType
 from tmcpy.message import Message
@@ -20,27 +20,41 @@ class _Reader(object):
         def unpack_from_wrap(fmt, offset):
             return unpack_from('<' + fmt, stream, offset)
 
-        message = Message(protocol_version=unpack_from_wrap('B', 0)[0],
-                          message_type=unpack_from_wrap('B', calcsize('<B'))[0])
+        message = Message(
+            protocol_version=unpack_from_wrap('B', 0)[0],
+            message_type=unpack_from_wrap('B', calcsize('<B'))[0]
+        )
         header_type = unpack_from_wrap('H', calcsize('<2B'))[0]
         message.update_offset(calcsize('<2BH'))
         _header_type = MessageType.HeaderType
 
         while header_type != _header_type.endOfHeaders:
             if header_type == _header_type.custom:
-                key, message.offset = cls._read_counted_str(stream, message.offset)
-                value, message.offset = cls._read_custom_value(stream, message.offset)
+                key, message.offset = cls._read_counted_str(
+                    stream,
+                    message.offset
+                )
+                value, message.offset = cls._read_custom_value(
+                    stream,
+                    message.offset
+                )
                 message.content[key] = value
             elif header_type == _header_type.statusCode:
                 message.status_code = unpack_from_wrap('I', message.offset)[0]
                 message.update_offset(calcsize('<I'))
             elif header_type == _header_type.statusPhrase:
-                message.status_phrase, message.offset = cls._read_counted_str(stream, message.offset)
+                message.status_phrase, message.offset = cls._read_counted_str(
+                    stream,
+                    message.offset
+                )
             elif header_type == _header_type.flag:
                 message.flag = unpack_from_wrap('I', message.offset)[0]
                 message.update_offset(calcsize('<I'))
             elif header_type == _header_type.token:
-                message.token, message.offset = cls._read_counted_str(stream, message.offset)
+                message.token, message.offset = cls._read_counted_str(
+                    stream,
+                    message.offset
+                )
 
             header_type = unpack_from_wrap('H', message.offset)[0]
             message.update_offset(calcsize('<H'))
@@ -131,16 +145,16 @@ class _Writer(object):
         if not value:
             stream.byte(MessageType.ValueFormat.void)
 
-        if isinstance(value, (types.IntType, types.LongType)) and value < ((1 << 8) - 1):
+        if isinstance(value, six.integer_types) and value < ((1 << 8) - 1):
             stream.byte(MessageType.ValueFormat.byte)
             stream.byte(value)
-        elif isinstance(value, (types.IntType, types.LongType)) and value < ((1 << 16) - 1):
+        elif isinstance(value, six.integer_types) and value < ((1 << 16) - 1):
             stream.byte(MessageType.ValueFormat.int16)
             stream.int16(value)
-        elif isinstance(value, (types.IntType, types.LongType)) and value < ((1 << 32) - 1):
+        elif isinstance(value, six.integer_types) and value < ((1 << 32) - 1):
             stream.byte(MessageType.ValueFormat.int32)
             stream.int32(value)
-        elif isinstance(value, (types.IntType, types.LongType)) and value < ((1 << 64) - 1):
+        elif isinstance(value, six.integer_types) and value < ((1 << 64) - 1):
             stream.byte(MessageType.ValueFormat.int64)
             stream.int64(value)
         else:
@@ -157,8 +171,10 @@ class WriteBuffer(bytearray):
         self.extend(pack('<B', v))
 
     def string(self, v):
+        from tmcpy.utils import to_binary
+
         if len(v) > 0:
-            self.extend(pack('<I%ds' % len(v), len(v), str(v)))
+            self.extend(pack('<I%ds' % len(v), len(v), to_binary(v)))
         else:
             self.extend(pack('<B', 0))
 

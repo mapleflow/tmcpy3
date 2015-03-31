@@ -43,9 +43,7 @@ class ConfirmMessage(Message):
 
     def __init__(self, *args, **kwargs):
         super(ConfirmMessage, self).__init__(*args, **kwargs)
-
         self.message_type = 2
-
         self.content = {'__kind': 2}
 
 
@@ -53,7 +51,5 @@ class QueryMessage(Message):
 
     def __init__(self, *args, **kwargs):
         super(QueryMessage, self).__init__(*args, **kwargs)
-
         self.message_type = 2
-
         self.content = {'__kind': 1}

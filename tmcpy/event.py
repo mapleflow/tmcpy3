@@ -2,10 +2,12 @@
 from collections import defaultdict
 
 
-class InvalidListenerError(Exception): pass
+class InvalidListenerError(Exception):
+    pass
 
 
-class DuplicateListenerError(Exception): pass
+class DuplicateListenerError(Exception):
+    pass
 
 
 class Event(object):
