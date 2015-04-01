@@ -1,7 +1,7 @@
 # coding: utf-8
 from setuptools import setup, find_packages
 
-version = '0.2.2'
+version = '0.2.3'
 
 setup(
     name='tmcpy',
