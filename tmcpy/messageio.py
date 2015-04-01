@@ -20,13 +20,13 @@ class _Reader(object):
         """ 读取消息数据 """
 
         def unpack_from_wrap(fmt, offset):
-            return unpack_from(b'<' + fmt, stream, offset)
+            return unpack_from(_b('<%s' % fmt), stream, offset)
 
         message = Message(
-            protocol_version=unpack_from_wrap(b'B', 0)[0],
-            message_type=unpack_from_wrap(b'B', calcsize(b'<B'))[0]
+            protocol_version=unpack_from_wrap('B', 0)[0],
+            message_type=unpack_from_wrap('B', calcsize(b'<B'))[0]
         )
-        header_type = unpack_from_wrap(b'H', calcsize(b'<2B'))[0]
+        header_type = unpack_from_wrap('H', calcsize(b'<2B'))[0]
         message.update_offset(calcsize(b'<2BH'))
         _header_type = MessageType.HeaderType
 
@@ -42,7 +42,7 @@ class _Reader(object):
                 )
                 message.content[key] = value
             elif header_type == _header_type.statusCode:
-                message.status_code = unpack_from_wrap(b'I', message.offset)[0]
+                message.status_code = unpack_from_wrap('I', message.offset)[0]
                 message.update_offset(calcsize(b'<I'))
             elif header_type == _header_type.statusPhrase:
                 message.status_phrase, message.offset = cls._read_counted_str(
@@ -50,7 +50,7 @@ class _Reader(object):
                     message.offset
                 )
             elif header_type == _header_type.flag:
-                message.flag = unpack_from_wrap(b'I', message.offset)[0]
+                message.flag = unpack_from_wrap('I', message.offset)[0]
                 message.update_offset(calcsize(b'<I'))
             elif header_type == _header_type.token:
                 message.token, message.offset = cls._read_counted_str(
@@ -58,7 +58,7 @@ class _Reader(object):
                     message.offset
                 )
 
-            header_type = unpack_from_wrap(b'H', message.offset)[0]
+            header_type = unpack_from_wrap('H', message.offset)[0]
             message.update_offset(calcsize(b'<H'))
 
         return message
