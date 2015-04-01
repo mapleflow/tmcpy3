@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import absolute_import, unicode_literals, print_function
+import sys
 import time
 import logging
 import hashlib
@@ -22,7 +23,7 @@ logger = logging.getLogger('tmcpy.client')
 class TmcClient(Event):
 
     def __init__(self, url, app_key, app_secret, group_name='default',
-                 query_message_interval=50, heartbeat_interval=30,
+                 query_message_interval=50, auto_reconnect=True,
                  *args, **kwargs):
         super(TmcClient, self).__init__(self)
 
@@ -33,14 +34,13 @@ class TmcClient(Event):
         assert isinstance(app_secret, six.string_types) and len(app_secret) > 0
         assert isinstance(group_name, six.string_types) and len(group_name) > 0
         assert isinstance(query_message_interval, int) and 0 < query_message_interval < 60
-        assert isinstance(heartbeat_interval, int) and 0 < heartbeat_interval < 60
 
         self.url = url
         self.app_secret = app_secret
         self.app_key = app_key
         self.group_name = group_name
         self.query_message_interval = query_message_interval
-        self.heartbeat_interval = heartbeat_interval
+        self.auto_reconnect = auto_reconnect
 
         self.token = None
 
@@ -81,6 +81,8 @@ class TmcClient(Event):
         if self.ws:
             self.ws.close()
 
+        self.fire('on_close')
+
     def write_binary(self, message):
         self.ws.write_message(message, True)
 
@@ -105,7 +107,12 @@ class TmcClient(Event):
         if data is None:
             logger.error('[%s:%s]TMC connection lost.', self.url, self.group_name)
             # reconnect
-            # self.connect()
+            if self.auto_reconnect:
+                self.connect()
+                self.fire('on_reconnect')
+            else:
+                ioloop.IOLoop.current(False).stop()
+                sys.exit(1)
 
         message = None
         try:
@@ -164,8 +171,8 @@ if __name__ == '__main__':
         print('on_open')
     ws.on("on_open", print1)
     try:
-        ioloop.IOLoop.current().start()
+        ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
-        pass
+        ioloop.IOLoop.current(False).stop()
     finally:
         ws.close()
