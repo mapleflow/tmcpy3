@@ -8,6 +8,7 @@ import six
 
 from tmcpy.messagetype import MessageType
 from tmcpy.message import Message
+from tmcpy.utils import to_binary as _b
 
 __all__ = ['reader', 'writer']
 
@@ -19,14 +20,14 @@ class _Reader(object):
         """ 读取消息数据 """
 
         def unpack_from_wrap(fmt, offset):
-            return unpack_from('<' + fmt, stream, offset)
+            return unpack_from(b'<' + fmt, stream, offset)
 
         message = Message(
-            protocol_version=unpack_from_wrap('B', 0)[0],
-            message_type=unpack_from_wrap('B', calcsize('<B'))[0]
+            protocol_version=unpack_from_wrap(b'B', 0)[0],
+            message_type=unpack_from_wrap(b'B', calcsize(b'<B'))[0]
         )
-        header_type = unpack_from_wrap('H', calcsize('<2B'))[0]
-        message.update_offset(calcsize('<2BH'))
+        header_type = unpack_from_wrap(b'H', calcsize(b'<2B'))[0]
+        message.update_offset(calcsize(b'<2BH'))
         _header_type = MessageType.HeaderType
 
         while header_type != _header_type.endOfHeaders:
@@ -41,60 +42,60 @@ class _Reader(object):
                 )
                 message.content[key] = value
             elif header_type == _header_type.statusCode:
-                message.status_code = unpack_from_wrap('I', message.offset)[0]
-                message.update_offset(calcsize('<I'))
+                message.status_code = unpack_from_wrap(b'I', message.offset)[0]
+                message.update_offset(calcsize(b'<I'))
             elif header_type == _header_type.statusPhrase:
                 message.status_phrase, message.offset = cls._read_counted_str(
                     stream,
                     message.offset
                 )
             elif header_type == _header_type.flag:
-                message.flag = unpack_from_wrap('I', message.offset)[0]
-                message.update_offset(calcsize('<I'))
+                message.flag = unpack_from_wrap(b'I', message.offset)[0]
+                message.update_offset(calcsize(b'<I'))
             elif header_type == _header_type.token:
                 message.token, message.offset = cls._read_counted_str(
                     stream,
                     message.offset
                 )
 
-            header_type = unpack_from_wrap('H', message.offset)[0]
-            message.update_offset(calcsize('<H'))
+            header_type = unpack_from_wrap(b'H', message.offset)[0]
+            message.update_offset(calcsize(b'<H'))
 
         return message
 
     @staticmethod
     def _read_counted_str(stream, offset):
         """ 读取字符串 """
-        length = unpack_from('<I', stream, offset)[0]
+        length = unpack_from(b'<I', stream, offset)[0]
         if length > 0:
-            s = unpack_from('<%ds' % length, stream, offset + calcsize('<I'))[0]
-            return s.decode('utf-8'), offset + calcsize('<I%ds' % length)
+            s = unpack_from(_b('<%ds' % length), stream, offset + calcsize(b'<I'))[0]
+            return s.decode('utf-8'), offset + calcsize(_b('<I%ds' % length))
         else:
-            return None, offset + calcsize('<I')
+            return None, offset + calcsize(b'<I')
 
     @classmethod
     def _read_custom_value(cls, stream, offset):
         """ 读取用户数据value """
-        _type = unpack_from('<B', stream, offset)[0]
+        _type = unpack_from(b'<B', stream, offset)[0]
         _value_fmt = MessageType.ValueFormat
-        offset += calcsize('<B')
+        offset += calcsize(b'<B')
 
         if _type == _value_fmt.void:
             return None, offset
         elif _type == _value_fmt.byte:
-            return unpack_from('<B', stream, offset)[0], offset + calcsize('<B')
+            return unpack_from(b'<B', stream, offset)[0], offset + calcsize(b'<B')
         elif _type == _value_fmt.int16:
-            return unpack_from('<H', stream, offset)[0], offset + calcsize('<H')
+            return unpack_from(b'<H', stream, offset)[0], offset + calcsize(b'<H')
         elif _type == _value_fmt.int32:
-            return unpack_from('<I', stream, offset)[0], offset + calcsize('<I')
+            return unpack_from(b'<I', stream, offset)[0], offset + calcsize(b'<I')
         elif _type == _value_fmt.int64:
-            return unpack_from('<Q', stream, offset)[0], offset + calcsize('<Q')
+            return unpack_from(b'<Q', stream, offset)[0], offset + calcsize(b'<Q')
         elif _type == _value_fmt.date:
-            ticks = unpack_from('<Q', stream, offset)[0]
-            return datetime.fromtimestamp(float(ticks) / 1000).strftime('%Y-%m-%d %H:%M:%S'), offset + calcsize('<Q')
+            ticks = unpack_from(b'<Q', stream, offset)[0]
+            return datetime.fromtimestamp(float(ticks) / 1000).strftime('%Y-%m-%d %H:%M:%S'), offset + calcsize(b'<Q')
         elif _type == _value_fmt.byteArray:
-            _l = unpack_from('<I', stream, offset)[0]
-            return unpack_from('<%dB' % _l, stream, offset + calcsize('<I'))[0], offset + calcsize('<I%dB' % _l)
+            _l = unpack_from(b'<I', stream, offset)[0]
+            return unpack_from(_b('<%dB' % _l), stream, offset + calcsize(b'<I'))[0], offset + calcsize(_b('<I%dB' % _l))
         else:
             return cls._read_counted_str(stream, offset)
 
@@ -169,21 +170,19 @@ def writer(message):
 
 class WriteBuffer(bytearray):
     def byte(self, v):
-        self.extend(pack('<B', v))
+        self.extend(pack(b'<B', v))
 
     def string(self, v):
-        from tmcpy.utils import to_binary
-
         if len(v) > 0:
-            self.extend(pack('<I%ds' % len(v), len(v), to_binary(v)))
+            self.extend(pack(_b('<I%ds' % len(v)), len(v), _b(v)))
         else:
-            self.extend(pack('<B', 0))
+            self.extend(pack(b'<B', 0))
 
     def int16(self, v):
-        self.extend(pack('<H', v))
+        self.extend(pack(b'<H', v))
 
     def int32(self, v):
-        self.extend(pack('<I', v))
+        self.extend(pack(b'<I', v))
 
     def int64(self, v):
-        self.extend(pack('<Q', v))
+        self.extend(pack(b'<Q', v))

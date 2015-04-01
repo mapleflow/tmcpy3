@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 import six
 
 from tmcpy.message import ConfirmMessage, QueryMessage
-from tmcpy.messageio import writer
 
 __all__ = [
     'confirm_message',
@@ -13,6 +12,8 @@ __all__ = [
 
 
 def confirm_message(message_id, token):
+    from tmcpy.messageio import writer
+
     cm = ConfirmMessage()
     cm.token = token
     cm.update_content({'id': message_id})
@@ -20,6 +21,8 @@ def confirm_message(message_id, token):
 
 
 def query_message(**kwargs):
+    from tmcpy.messageio import writer
+
     return writer(QueryMessage(**kwargs))
 
 
