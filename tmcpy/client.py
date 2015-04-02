@@ -27,8 +27,6 @@ class TmcClient(Event):
                  *args, **kwargs):
         super(TmcClient, self).__init__(self)
 
-        logger.info('[%s:%s]WebSocket Connect Success.', url, group_name)
-
         assert isinstance(url, six.string_types) and len(url) > 0
         assert isinstance(app_key, six.string_types) and len(app_key) > 0
         assert isinstance(app_secret, six.string_types) and len(app_secret) > 0
@@ -47,9 +45,9 @@ class TmcClient(Event):
         self.ws = None
         self.connect()
 
-        self.fire('on_init')
-        self.on('on_handshake_success', self._start_query_loop)
-        self.on('on_confirm_message', self._on_confirm_message)
+        self.fire('init')
+        self.on('handshake_success', self._start_query_loop)
+        self.on('confirm_message', self._on_confirm_message)
 
     def create_sign(self, timestamp):
         timestamp = timestamp if timestamp else int(round(time.time() * 1000))
@@ -81,13 +79,14 @@ class TmcClient(Event):
         if self.ws:
             self.ws.close()
 
-        self.fire('on_close')
+        self.fire('close')
 
     def write_binary(self, message):
         self.ws.write_message(message, True)
 
     def on_open(self, future):
         self.ws = future.result()
+        logger.info('[%s:%s]WebSocket Connect Success.', self.url, self.group_name)
         timestamp = int(round(time.time() * 1000))
         logger.info('[%s:%s]TMC Handshake Start.', self.url, self.group_name)
 
@@ -101,7 +100,7 @@ class TmcClient(Event):
 
         message = writer(Message(2, 0, flag=1, content=params))
         self.write_binary(message)
-        self.fire('on_open')
+        self.fire('open')
 
     def on_message(self, data):
         if data is None:
@@ -109,7 +108,7 @@ class TmcClient(Event):
             # reconnect
             if self.auto_reconnect:
                 self.connect()
-                self.fire('on_reconnect')
+                self.fire('reconnect')
             else:
                 ioloop.IOLoop.current(False).stop()
                 sys.exit(1)
@@ -129,10 +128,10 @@ class TmcClient(Event):
             self.token = message.token
             logger.info('[%s:%s]TMC Handshake Success. The Token Is %s',
                         self.url, self.group_name, message.token)
-            self.fire('on_handshake_success', token=self.token)
+            self.fire('handshake_success', token=self.token)
         elif message.message_type == 2:  # 服务器主动通知消息
-            self.fire('on_confirm_message', message_id=message.content.get('id'))
-            self.fire('on_message', message=message)
+            self.fire('confirm_message', message_id=message.content.get('id'))
+            self.fire('message', message=message)
         elif message.message_type == 3:  # 主动拉取消息返回
             pass
         else:
@@ -168,8 +167,8 @@ if __name__ == '__main__':
     ws = TmcClient('ws://mc.api.tbsandbox.com/', '1021700086', 'sandboxfd42495fa4db86f6ad1d4b878', 'default',
         query_message_interval=50)
     def print1():
-        print('on_open')
-    ws.on("on_open", print1)
+        print('on open')
+    ws.on("open", print1)
     try:
         ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
