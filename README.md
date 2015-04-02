@@ -46,6 +46,36 @@ finally:
 ```
 
 
+## 事件说明
+
+事件通过 ``TmcClient.on`` 方法监听，如：
+```python
+from tmcpy import TmcClient
+
+def on_open():
+    pass
+
+def on_message(message):
+    pass
+
+tmc = TmcClient('', '', '', '')
+tmc.on('on_open', on_open)
+tmc.on('on_message', on_message)
+```
+
+所有事件参数使用关键字参数传递，所以监听事件函数参数和事件参数名称应当一致。
+
+1. ``on_init``: 无参数
+2. ``on_handshake_success``: 参数 `token`
+3. ``on_confirm_message``: 参数 `message_id`
+4. ``on_open``: 无参数
+5. ``on_close``: 无参数
+6. ``on_reconnect``: 无参数
+7. ``parse_message_error``: 无参数
+8. ``received_message``: 无参数
+9. ``on_message``: 参数 `message`
+
+
 ## 官方文档
 
 请查阅淘宝开放平台消息服务官方文档:
