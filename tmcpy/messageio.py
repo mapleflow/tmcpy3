@@ -1,8 +1,13 @@
 # coding: utf-8
 from __future__ import absolute_import, unicode_literals
 
+import logging
 from struct import calcsize, unpack_from, pack
 from datetime import datetime
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 import six
 
@@ -12,6 +17,8 @@ from tmcpy.utils import to_binary as _b
 
 __all__ = ['reader', 'writer']
 
+logger = logging.getLogger(__name__)
+
 
 class _Reader(object):
 
@@ -20,7 +27,11 @@ class _Reader(object):
         """ 读取消息数据 """
 
         def unpack_from_wrap(fmt, offset):
-            return unpack_from(_b('<%s' % fmt), stream, offset)
+            try:
+                return unpack_from(_b('<%s' % fmt), stream, offset)
+            except ValueError as e:
+                logger.exception('Error unpack_from stream: %s', stream)
+                six.reraise(*e)
 
         message = Message(
             protocol_version=unpack_from_wrap('B', 0)[0],
@@ -40,6 +51,13 @@ class _Reader(object):
                     stream,
                     message.offset
                 )
+                if key == 'content':
+                    try:
+                        decoded_value = json.loads(value)
+                    except (json.JSONDecodeError, ValueError):
+                        pass
+                    else:
+                        value = decoded_value
                 message.content[key] = value
             elif header_type == _header_type.statusCode:
                 message.status_code = unpack_from_wrap('I', message.offset)[0]
