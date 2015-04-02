@@ -52,5 +52,9 @@ finally:
         'tornado>=4.1',
         'six>=1.9.0',
         'simplejson>=3.6.5'
-    ]
+    ],
+    tests_require=[
+        'nose',
+    ],
+    test_suite='nose.collector'
 )
