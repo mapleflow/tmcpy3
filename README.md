@@ -36,7 +36,7 @@ def print1():
     print 'on_open'
 
 
-tmc.on("on_open", print1)
+tmc.on("open", print1)
 try:
     ioloop.IOLoop.instance().start()
 except KeyboardInterrupt:
