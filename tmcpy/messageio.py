@@ -118,8 +118,7 @@ class _Reader(object):
             return cls._read_counted_str(stream, offset)
 
 
-def reader(stream):
-    return _Reader.read(stream)
+reader = _Reader.read
 
 
 class _Writer(object):
@@ -152,7 +151,7 @@ class _Writer(object):
 
         stream.int16(MessageType.HeaderType.endOfHeaders)
 
-        return stream
+        return bytes(stream)
 
     @classmethod
     def _write_custom_header(cls, stream, key, value):
@@ -182,8 +181,7 @@ class _Writer(object):
             stream.string(value)
 
 
-def writer(message):
-    return bytes(_Writer.write(message))
+writer = _Writer.write
 
 
 class WriteBuffer(bytearray):
