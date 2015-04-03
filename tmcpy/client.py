@@ -91,7 +91,7 @@ class TmcClient(Event):
         logger.info('[%s:%s]TMC Handshake Start.', self.url, self.group_name)
 
         params = {
-            'timestamp': str(timestamp),
+            'timestamp': to_binary(timestamp),
             'app_key': self.app_key,
             'sdk': 'top-sdk-java-201403304',
             'sign': self.create_sign(timestamp),
@@ -168,7 +168,7 @@ class TmcClient(Event):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     ws = TmcClient('ws://mc.api.tbsandbox.com/', '1021700086', 'sandboxfd42495fa4db86f6ad1d4b878', 'default',
-        query_message_interval=50)
+        query_message_interval=10, auto_reconnect=False)
     def print1():
         print('on open')
     ws.on("open", print1)
