@@ -31,7 +31,7 @@ class TmcClient(Event):
         assert isinstance(app_key, six.string_types) and len(app_key) > 0
         assert isinstance(app_secret, six.string_types) and len(app_secret) > 0
         assert isinstance(group_name, six.string_types) and len(group_name) > 0
-        assert isinstance(query_message_interval, int) and 0 < query_message_interval < 60
+        assert isinstance(query_message_interval, int) and 0 <= query_message_interval < 60
 
         self.url = url
         self.app_secret = app_secret
@@ -151,6 +151,9 @@ class TmcClient(Event):
                 logger.debug('[%s:%s]Send Query Message Request.', url, group_name)
                 self.write_binary(query_message(token=token))
             return _
+
+        if not self.query_message_interval > 0:
+            return
 
         periodic = ioloop.PeriodicCallback(
             _query_message_loop(self, self.url, self.group_name, self.token),
