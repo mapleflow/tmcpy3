@@ -67,12 +67,16 @@ class TmcClient(Event):
         )
         return hashlib.md5(to_binary(params)).hexdigest().upper()
 
-    def connect(self):
+    def connect(self, is_reconnect=False):
+        if is_reconnect:
+            logger.info('[%s:%s]TMC reconnecting.', self.url, self.group_name)
         websocket_connect(
             self.url,
             callback=self.on_open,
             on_message_callback=self.on_message
         )
+        if is_reconnect:
+            self.fire('reconnect')
 
     def close(self):
         logger.info('[%s:%s]TMC Connection Closing.', self.url, self.group_name)
@@ -91,7 +95,7 @@ class TmcClient(Event):
         logger.info('[%s:%s]TMC Handshake Start.', self.url, self.group_name)
 
         params = {
-            'timestamp': str(timestamp),
+            'timestamp': to_binary(timestamp),
             'app_key': self.app_key,
             'sdk': 'top-sdk-java-201403304',
             'sign': self.create_sign(timestamp),
@@ -107,8 +111,11 @@ class TmcClient(Event):
             logger.error('[%s:%s]TMC connection lost.', self.url, self.group_name)
             # reconnect
             if self.auto_reconnect:
-                self.connect()
-                self.fire('reconnect')
+                if self.ws:
+                    self.ws.close()
+                    self.ws = None
+                self.connect(is_reconnect=True)
+                return
             else:
                 ioloop.IOLoop.current(False).stop()
                 sys.exit(1)
@@ -136,7 +143,7 @@ class TmcClient(Event):
             pass
         else:
             logger.error('[%s:%s]Unknown message recieved: %s',
-                        self.url, self.group_name, message.message_type)
+                         self.url, self.group_name, message.message_type)
 
     def _on_confirm_message(self, message_id):
         cm = confirm_message(message_id, self.token)
@@ -167,10 +174,18 @@ class TmcClient(Event):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    ws = TmcClient('ws://mc.api.tbsandbox.com/', '1021700086', 'sandboxfd42495fa4db86f6ad1d4b878', 'default',
-        query_message_interval=50)
+    ws = TmcClient(
+        'ws://mc.api.tbsandbox.com/',
+        '1021700086',
+        'sandboxfd42495fa4db86f6ad1d4b878',
+        'default',
+        query_message_interval=10,
+        auto_reconnect=False
+    )
+
     def print1():
         print('on open')
+
     ws.on("open", print1)
     try:
         ioloop.IOLoop.instance().start()
