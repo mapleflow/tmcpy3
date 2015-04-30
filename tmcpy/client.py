@@ -31,7 +31,10 @@ class TmcClient(Event):
         assert isinstance(app_key, six.string_types) and len(app_key) > 0
         assert isinstance(app_secret, six.string_types) and len(app_secret) > 0
         assert isinstance(group_name, six.string_types) and len(group_name) > 0
-        assert isinstance(query_message_interval, int) and 0 <= query_message_interval < 60
+        assert (
+            isinstance(query_message_interval, int) and
+            0 <= query_message_interval < 60
+        )
 
         self.url = url
         self.app_secret = app_secret
@@ -57,8 +60,7 @@ class TmcClient(Event):
             'timestamp': timestamp,
         }
 
-        keys = list(params.keys())
-        keys.sort()
+        keys = sorted(params.keys())
 
         params = "%s%s%s" % (
             self.app_secret,
@@ -79,18 +81,28 @@ class TmcClient(Event):
             self.fire('reconnect')
 
     def close(self):
-        logger.info('[%s:%s]TMC Connection Closing.', self.url, self.group_name)
+        logger.info(
+            '[%s:%s]TMC Connection Closing.',
+            self.url,
+            self.group_name
+        )
         if self.ws:
             self.ws.close()
 
         self.fire('close')
 
     def write_binary(self, message):
+        if not self.ws:
+            return
         self.ws.write_message(message, True)
 
     def on_open(self, future):
         self.ws = future.result()
-        logger.info('[%s:%s]WebSocket Connect Success.', self.url, self.group_name)
+        logger.info(
+            '[%s:%s]WebSocket Connect Success.',
+            self.url,
+            self.group_name
+        )
         timestamp = int(round(time.time() * 1000))
         logger.info('[%s:%s]TMC Handshake Start.', self.url, self.group_name)
 
@@ -108,7 +120,11 @@ class TmcClient(Event):
 
     def on_message(self, data):
         if data is None:
-            logger.error('[%s:%s]TMC connection lost.', self.url, self.group_name)
+            logger.error(
+                '[%s:%s]TMC connection lost.',
+                self.url,
+                self.group_name
+            )
             # reconnect
             if self.auto_reconnect:
                 if self.ws:
@@ -124,12 +140,22 @@ class TmcClient(Event):
         try:
             message = reader(data)
         except Exception:
-            logging.exception('[%s:%s]Message Parse Error.', self.url, self.group_name)
+            logging.exception(
+                '[%s:%s]Message Parse Error. Raw data: %s',
+                self.url,
+                self.group_name,
+                data
+            )
             self.fire('parse_message_error')
             raise
 
         self.fire('received_message')
-        logger.debug('[%s:%s]Recevied Message %s', self.url, self.group_name, message)
+        logger.debug(
+            '[%s:%s]Recevied Message %s',
+            self.url,
+            self.group_name,
+            message
+        )
 
         if message.message_type == 1:  # 发送连接数据返回
             self.token = message.token
@@ -147,7 +173,11 @@ class TmcClient(Event):
 
     def _on_confirm_message(self, message_id):
         cm = confirm_message(message_id, self.token)
-        logger.debug('[%s"%s]Confirm Message: %s', self.url, self.group_name, message_id)
+        logger.debug(
+            '[%s"%s]Confirm Message: %s',
+            self.url,
+            self.group_name,
+            message_id)
         self.write_binary(cm)
 
     def _start_query_loop(self, token=None):
@@ -155,7 +185,11 @@ class TmcClient(Event):
 
         def _query_message_loop(self, url, group_name, token):
             def _():
-                logger.debug('[%s:%s]Send Query Message Request.', url, group_name)
+                logger.debug(
+                    '[%s:%s]Send Query Message Request.',
+                    url,
+                    group_name
+                )
                 self.write_binary(query_message(token=token))
             return _
 
@@ -167,7 +201,11 @@ class TmcClient(Event):
             self.query_message_interval * 1000
         )
 
-        logger.info('[%s:%s]Start Query Message Interval.', self.url, self.group_name)
+        logger.info(
+            '[%s:%s]Start Query Message Interval.',
+            self.url,
+            self.group_name
+        )
 
         periodic.start()
 
@@ -180,7 +218,6 @@ if __name__ == '__main__':
         'sandboxfd42495fa4db86f6ad1d4b878',
         'default',
         query_message_interval=10,
-        auto_reconnect=False
     )
 
     def print1():
