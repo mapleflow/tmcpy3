@@ -74,6 +74,7 @@ tmc.on('message', on_message)
 7. ``parse_message_error``: 无参数
 8. ``received_message``: 无参数
 9. ``message``: 参数 `message`
+10. ``connection_lost``: 参数 `client`
 
 
 ## 官方文档

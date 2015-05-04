@@ -125,6 +125,7 @@ class TmcClient(Event):
                 self.url,
                 self.group_name
             )
+            self.fire('connection_lost', client=self)
             # reconnect
             if self.auto_reconnect:
                 if self.ws:
