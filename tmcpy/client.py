@@ -44,6 +44,7 @@ class TmcClient(Event):
         self.auto_reconnect = auto_reconnect
 
         self.token = None
+        self._periodic = None
 
         self.ws = None
         self.connect()
@@ -125,6 +126,7 @@ class TmcClient(Event):
                 self.url,
                 self.group_name
             )
+            self._stop_query_loop()
             self.fire('connection_lost', client=self)
             # reconnect
             if self.auto_reconnect:
@@ -197,10 +199,16 @@ class TmcClient(Event):
         if not self.query_message_interval > 0:
             return
 
-        periodic = ioloop.PeriodicCallback(
-            _query_message_loop(self, self.url, self.group_name, self.token),
-            self.query_message_interval * 1000
-        )
+        if self._periodic is None:
+            self._periodic = ioloop.PeriodicCallback(
+                _query_message_loop(
+                    self,
+                    self.url,
+                    self.group_name,
+                    self.token
+                ),
+                self.query_message_interval * 1000
+            )
 
         logger.info(
             '[%s:%s]Start Query Message Interval.',
@@ -208,7 +216,13 @@ class TmcClient(Event):
             self.group_name
         )
 
-        periodic.start()
+        self._periodic.start()
+
+    def _stop_query_loop(self):
+        """ 停止主动拉取消息循环 """
+        if self._periodic is None:
+            return
+        self._periodic.stop()
 
 
 if __name__ == '__main__':
