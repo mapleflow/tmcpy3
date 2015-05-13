@@ -1,7 +1,7 @@
 # coding: utf-8
 from setuptools import setup, find_packages
 
-version = '0.3.4'
+version = '0.3.5'
 
 setup(
     name='tmcpy',
@@ -48,10 +48,9 @@ finally:
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        # -*- Extra requirements: -*-
         'tornado>=4.1',
-        'six>=1.9.0',
-        'simplejson>=3.6.5'
+        'six>=1.8.0',
+        'simplejson>=3.5.2'
     ],
     tests_require=[
         'nose',
