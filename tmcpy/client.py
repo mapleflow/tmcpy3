@@ -177,7 +177,7 @@ class TmcClient(Event):
     def _on_confirm_message(self, message_id):
         cm = confirm_message(message_id, self.token)
         logger.debug(
-            '[%s"%s]Confirm Message: %s',
+            '[%s"%s]Confirming Message: %s',
             self.url,
             self.group_name,
             message_id)
@@ -189,7 +189,7 @@ class TmcClient(Event):
         def _query_message_loop(self, url, group_name, token):
             def _():
                 logger.debug(
-                    '[%s:%s]Send Query Message Request.',
+                    '[%s:%s]Sending Query Message Request.',
                     url,
                     group_name
                 )
@@ -211,7 +211,7 @@ class TmcClient(Event):
             )
 
         logger.info(
-            '[%s:%s]Start Query Message Interval.',
+            '[%s:%s]Starting Query Message Interval.',
             self.url,
             self.group_name
         )
@@ -223,6 +223,11 @@ class TmcClient(Event):
         if self._periodic is None:
             return
         self._periodic.stop()
+        logger.info(
+            '[%s:%s]Stopped Query Message Interval.',
+            self.url,
+            self.group_name
+        )
 
 
 if __name__ == '__main__':
