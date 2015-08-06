@@ -3,7 +3,7 @@ tmcpy
 
 淘宝平台消息服务客户端 for Python
 
-Forked from https://github.com/baocaixiong/taobao-tmc-python , license unknown.
+Forked from https://github.com/baocaixiong/taobao-tmc-python , license MIT
 
 ## 安装
 
