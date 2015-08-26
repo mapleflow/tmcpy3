@@ -42,6 +42,7 @@ class TmcClient(Event):
         self.group_name = group_name
         self.query_message_interval = query_message_interval
         self.auto_reconnect = auto_reconnect
+        self._reconnecting = False
 
         self.token = None
         self._periodic = None
@@ -72,13 +73,16 @@ class TmcClient(Event):
 
     def connect(self, is_reconnect=False):
         if is_reconnect:
+            self._reconnecting = True
             logger.info('[%s:%s]TMC reconnecting.', self.url, self.group_name)
+
         websocket_connect(
             self.url,
             callback=self.on_open,
             on_message_callback=self.on_message
         )
         if is_reconnect:
+            self._reconnecting = False
             self.fire('reconnect')
 
     def close(self):
@@ -130,10 +134,11 @@ class TmcClient(Event):
             self.fire('connection_lost', client=self)
             # reconnect
             if self.auto_reconnect:
-                if self.ws:
-                    self.ws.close()
-                    self.ws = None
-                self.connect(is_reconnect=True)
+                if not self._reconnecting:
+                    if self.ws:
+                        self.ws.close()
+                        self.ws = None
+                    self.connect(is_reconnect=True)
                 return
             else:
                 ioloop.IOLoop.current(False).stop()
@@ -193,7 +198,8 @@ class TmcClient(Event):
                     url,
                     group_name
                 )
-                self.write_binary(query_message(token=token))
+                if not self._reconnecting:
+                    self.write_binary(query_message(token=token))
             return _
 
         if not self.query_message_interval > 0:
