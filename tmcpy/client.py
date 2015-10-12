@@ -75,15 +75,13 @@ class TmcClient(Event):
         if is_reconnect:
             self._reconnecting = True
             logger.info('[%s:%s]TMC reconnecting.', self.url, self.group_name)
+            self.fire('reconnect')
 
         websocket_connect(
             self.url,
             callback=self.on_open,
             on_message_callback=self.on_message
         )
-        if is_reconnect:
-            self._reconnecting = False
-            self.fire('reconnect')
 
     def close(self):
         logger.info(
@@ -166,6 +164,7 @@ class TmcClient(Event):
         )
 
         if message.message_type == 1:  # 发送连接数据返回
+            self._reconnecting = False
             self.token = message.token
             logger.info('[%s:%s]TMC Handshake Success. The Token Is %s',
                         self.url, self.group_name, message.token)
