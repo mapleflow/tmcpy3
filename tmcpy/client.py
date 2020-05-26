@@ -100,7 +100,13 @@ class TmcClient(Event):
         self.ws.write_message(message, True)
 
     def on_open(self, future):
-        self.ws = future.result()
+        while 1:
+            # future 是异步的，不是顺序执行，获取连接才能发送 message
+            self.ws = future.result()
+            if self.ws:
+                break
+            time.sleep(0.5)
+            
         logger.info(
             '[%s:%s]WebSocket Connect Success.',
             self.url,
@@ -110,7 +116,7 @@ class TmcClient(Event):
         logger.info('[%s:%s]TMC Handshake Start.', self.url, self.group_name)
 
         params = {
-            'timestamp': to_binary(timestamp),
+            'timestamp': str(timestamp),
             'app_key': self.app_key,
             'sdk': 'top-sdk-java-201403304',
             'sign': self.create_sign(timestamp),
