@@ -1,19 +1,6 @@
-tmcpy
-=======================
-
-淘宝平台消息服务客户端 for Python
-
-Forked from https://github.com/baocaixiong/taobao-tmc-python , license MIT
-
 ## 安装
 
-推荐使用 pip 进行安装：
-
-    pip install tmcpy
-
-升级版本：
-
-    pip install -U tmcpy
+源码安装
 
 ## 用法示例
 
@@ -35,7 +22,7 @@ tmc = TmcClient(
 
 
 def print1():
-    print 'on_open'
+    print('on_open')
 
 
 tmc.on("open", print1)
